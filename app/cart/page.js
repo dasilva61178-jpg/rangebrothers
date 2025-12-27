@@ -1,82 +1,212 @@
-
-
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useCart } from "../context/cartcontext";
 
-const CartContext = createContext(null);
+export default function CartPage() {
+  const {
+    cart,
+    increaseQty,
+    decreaseQty,
+    removeItem,
+    clearCart,
+  } = useCart();
 
-export function CartProvider({ children }) {
-  const [cart, setCart] = useState([]);
+  const total = cart.reduce(
+    (sum, item) => sum + Number(item.price) * Number(item.quantity),
+    0
+  );
 
-  // ADD ITEM
-  const addToCart = (product) => {
-    setCart((prev) => {
-      const existing = prev.find(
+  const whatsappMessage = encodeURIComponent(
+    cart
+      .map(
         (item) =>
-          item.id === product.id &&
-          item.storage === product.storage &&
-          item.color === product.color
-      );
-
-      if (existing) {
-        return prev.map((item) =>
-          item === existing
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  };
-
-  // INCREASE QTY
-  const increaseQty = (index) => {
-    setCart((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, quantity: item.quantity + 1 } : item
+          `${item.name} (${item.storage}, ${item.color}) x${item.quantity} - MWK ${
+            item.price * item.quantity
+          }`
       )
-    );
-  };
-
-  // DECREASE QTY
-  const decreaseQty = (index) => {
-    setCart((prev) =>
-      prev
-        .map((item, i) =>
-          i === index
-            ? { ...item, quantity: Math.max(1, item.quantity - 1) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  // REMOVE ITEM
-  const removeItem = (index) => {
-    setCart((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // CLEAR CART
-  const clearCart = () => setCart([]);
+      .join("\n") + `\n\nTotal: MWK ${total}`
+  );
 
   return (
-    <CartContext.Provider
-      value={{
-        cart,
-        addToCart,
-        increaseQty,
-        decreaseQty,
-        removeItem,
-        clearCart,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
+    <div style={containerStyle}>
+      <h1 style={titleStyle}>Your Cart</h1>
+
+      {cart.length === 0 && (
+        <p style={{ opacity: 0.6 }}>Your cart is empty.</p>
+      )}
+
+      <AnimatePresence>
+        {cart.map((item, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.25 }}
+            style={itemStyle}
+          >
+            <div>
+              <h3 style={{ margin: 0 }}>{item.name}</h3>
+              <p style={subText}>
+                {item.storage} • {item.color}
+              </p>
+              <p style={priceText}>
+                MWK {(item.price * item.quantity).toLocaleString()}
+              </p>
+            </div>
+
+            <div style={rightSide}>
+              <div style={qtyWrapper}>
+                <button
+                  onClick={() => decreaseQty(index)}
+                  style={qtyBtn}
+                >
+                  −
+                </button>
+                <span>{item.quantity}</span>
+                <button
+                  onClick={() => increaseQty(index)}
+                  style={qtyBtn}
+                >
+                  +
+                </button>
+              </div>
+
+              <button
+                onClick={() => removeItem(index)}
+                style={removeBtn}
+              >
+                Remove
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {cart.length > 0 && (
+        <>
+          <div style={totalRow}>
+            <strong>Total:</strong>
+            <strong>MWK {total.toLocaleString()}</strong>
+          </div>
+
+          <div style={actions}>
+            <button onClick={clearCart} style={clearBtn}>
+              Clear Cart
+            </button>
+
+            <a
+              href={`https://wa.me/265882267019?text=${whatsappMessage}`}
+              style={checkoutBtn}
+            >
+              Checkout on WhatsApp
+            </a>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
-export function useCart() {
-  return useContext(CartContext);
-}
+/* ---------------- STYLES ---------------- */
+
+const containerStyle = {
+  maxWidth: "900px",
+  margin: "60px auto",
+  padding: "20px",
+};
+
+const titleStyle = {
+  fontSize: "36px",
+  color: "#1dbf73",
+  marginBottom: "30px",
+};
+
+const itemStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  background: "rgba(255,255,255,0.05)",
+  padding: "16px 20px",
+  borderRadius: "16px",
+  marginBottom: "14px",
+};
+
+const rightSide = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-end",
+  gap: "10px",
+};
+
+const qtyWrapper = {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+};
+
+const qtyBtn = {
+  width: "34px",
+  height: "34px",
+  borderRadius: "50%",
+  border: "1px solid #1dbf73",
+  background: "transparent",
+  color: "#1dbf73",
+  fontSize: "18px",
+  cursor: "pointer",
+};
+
+const removeBtn = {
+  background: "rgba(255,107,107,0.15)",
+  color: "#ff6b6b",
+  border: "1px solid rgba(255,107,107,0.4)",
+  padding: "6px 14px",
+  borderRadius: "20px",
+  cursor: "pointer",
+  fontSize: "14px",
+};
+
+const priceText = {
+  color: "#1dbf73",
+  marginTop: "4px",
+};
+
+const subText = {
+  opacity: 0.6,
+  fontSize: "14px",
+};
+
+const totalRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  marginTop: "30px",
+  fontSize: "20px",
+};
+
+const actions = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginTop: "30px",
+  flexWrap: "wrap",
+  gap: "14px",
+};
+
+const clearBtn = {
+  background: "rgba(255,255,255,0.08)",
+  color: "#fff",
+  padding: "12px 20px",
+  borderRadius: "30px",
+  border: "1px solid rgba(255,255,255,0.2)",
+  cursor: "pointer",
+};
+
+const checkoutBtn = {
+  background: "#1dbf73",
+  color: "#02130d",
+  padding: "14px 26px",
+  borderRadius: "30px",
+  fontWeight: "600",
+  textDecoration: "none",
+};
