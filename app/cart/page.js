@@ -1,124 +1,82 @@
+
+
 "use client";
 
-import { useCart } from "../context/cartcontext";
+import { createContext, useContext, useState } from "react";
 
-export default function CartPage() {
-  const {
-    cart,
-    increaseQty,
-    decreaseQty,
-    removeFromCart,
-    clearCart,
-  } = useCart();
+const CartContext = createContext(null);
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+export function CartProvider({ children }) {
+  const [cart, setCart] = useState([]);
 
-  const whatsappMessage = encodeURIComponent(
-    cart
-      .map(
-        (item, index) =>
-          `${index + 1}. ${item.name} | ${item.storage} | ${item.color} x${
-            item.quantity
-          } | MWK ${(item.price * item.quantity).toLocaleString()}`
+  // ADD ITEM
+  const addToCart = (product) => {
+    setCart((prev) => {
+      const existing = prev.find(
+        (item) =>
+          item.id === product.id &&
+          item.storage === product.storage &&
+          item.color === product.color
+      );
+
+      if (existing) {
+        return prev.map((item) =>
+          item === existing
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  // INCREASE QTY
+  const increaseQty = (index) => {
+    setCart((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, quantity: item.quantity + 1 } : item
       )
-      .join("\n") +
-      `\n\nTOTAL: MWK ${total.toLocaleString()}`
-  );
+    );
+  };
+
+  // DECREASE QTY
+  const decreaseQty = (index) => {
+    setCart((prev) =>
+      prev
+        .map((item, i) =>
+          i === index
+            ? { ...item, quantity: Math.max(1, item.quantity - 1) }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  // REMOVE ITEM
+  const removeItem = (index) => {
+    setCart((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // CLEAR CART
+  const clearCart = () => setCart([]);
 
   return (
-    <main
-      style={{
-        maxWidth: "900px",
-        margin: "60px auto",
-        padding: "20px",
-        color: "#fff",
+    <CartContext.Provider
+      value={{
+        cart,
+        addToCart,
+        increaseQty,
+        decreaseQty,
+        removeItem,
+        clearCart,
       }}
     >
-      <h1 style={{ color: "#1dbf73", fontSize: "36px" }}>Your Cart</h1>
-
-      {cart.length === 0 && <p>Your cart is empty.</p>}
-
-      {cart.map((item, index) => (
-        <div
-          key={index}
-          style={{
-            display: "flex",
-            gap: "20px",
-            alignItems: "center",
-            border: "1px solid rgba(29,191,115,0.4)",
-            borderRadius: "14px",
-            padding: "16px",
-            marginBottom: "20px",
-            background: "rgba(0,0,0,0.35)",
-          }}
-        >
-          <img
-            src={item.image}
-            alt={item.name}
-            style={{ width: "90px", borderRadius: "10px" }}
-          />
-
-          <div style={{ flex: 1 }}>
-            <h3 style={{ margin: 0, color: "#1dbf73" }}>{item.name}</h3>
-            <p>{item.storage} • {item.color}</p>
-            <p>
-              MWK {(item.price * item.quantity).toLocaleString()}
-            </p>
-
-            {/* QUANTITY CONTROLS */}
-            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-              <button onClick={() => decreaseQty(index)}>−</button>
-              <span>{item.quantity}</span>
-              <button onClick={() => increaseQty(index)}>+</button>
-            </div>
-          </div>
-
-          <button
-            onClick={() => removeFromCart(index)}
-            style={{ color: "red" }}
-          >
-            Remove
-          </button>
-        </div>
-      ))}
-
-      {cart.length > 0 && (
-        <>
-          <h2 style={{ marginTop: "20px" }}>
-            Total: <span style={{ color: "#1dbf73" }}>
-              MWK {total.toLocaleString()}
-            </span>
-          </h2>
-
-          <a
-            href={`https://wa.me/265882267019?text=${whatsappMessage}`}
-            target="_blank"
-            style={{
-              display: "inline-block",
-              marginTop: "30px",
-              background: "#1dbf73",
-              padding: "14px 34px",
-              borderRadius: "30px",
-              color: "#02130d",
-              fontSize: "18px",
-              fontWeight: "700",
-              textDecoration: "none",
-            }}
-          >
-            Checkout on WhatsApp
-          </a>
-
-          <br />
-
-          <button onClick={clearCart} style={{ marginTop: "15px" }}>
-            Clear Cart
-          </button>
-        </>
-      )}
-    </main>
+      {children}
+    </CartContext.Provider>
   );
 }
 
+export function useCart() {
+  return useContext(CartContext);
+}

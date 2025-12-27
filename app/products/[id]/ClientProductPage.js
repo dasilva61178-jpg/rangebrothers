@@ -120,13 +120,11 @@ export default function ClientProductPage({ product }) {
       <button
         onClick={() =>
           addToCart({
-            id: product.id,
-            name: product.name,
-            color: selectedColor,
-            storage: selectedVariant.storage,
-            price: selectedVariant.price,
-            image: product.images[selectedColor],
-            qty: 1,
+           id: product.id,
+           name: product.name,
+           color: selectedColor,
+           storage: selectedVariant.storage,
+           price: selectedVariant.price,
           })
         }
         style={{
