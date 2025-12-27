@@ -1,172 +1,170 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./context/cartcontext";
+import MobileCart from "./components/MobileCart";
 
 export default function Navbar() {
-  const pathname = usePathname();
-  const { cartCount } = useCart();
-  const [open, setOpen] = useState(false);
+  const { cart } = useCart();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
-  const isActive = (href) => pathname === href;
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <header
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        background: "rgba(2, 19, 13, 0.9)",
-        backdropFilter: "blur(10px)",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
-      }}
-    >
-      {/* TOP BAR */}
-      <div
-        style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-          padding: "14px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* LOGO */}
-        <Link
-          href="/"
-          onClick={() => setOpen(false)}
-          style={{
-            color: "#1dbf73",
-            fontWeight: 800,
-            fontSize: "20px",
-            textDecoration: "none",
-          }}
-        >
+    <>
+      <nav style={nav}>
+        <Link href="/" style={logo}>
           RangeBrothers
         </Link>
 
-        {/* DESKTOP NAV */}
-        <nav
-          style={{
-            display: "none",
-            gap: "20px",
-          }}
-          className="desktop-nav"
-        >
-          <NavLinks
-            isActive={isActive}
-            cartCount={cartCount}
-            close={() => {}}
-          />
-        </nav>
+        {/* DESKTOP LINKS */}
+        <div className="desktop-nav" style={links}>
+          <Link href="/products" style={link}>Products</Link>
+          <Link href="/cart" style={link}>Cart ({cartCount})</Link>
+        </div>
 
-        {/* HAMBURGER */}
-        <button
-          onClick={() => setOpen(!open)}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#fff",
-            fontSize: "26px",
-            cursor: "pointer",
-          }}
-          aria-label="Menu"
-        >
-          ☰
-        </button>
-      </div>
+        {/* MOBILE ICONS */}
+        <div className="mobile-nav" style={mobileIcons}>
+          <button style={iconBtn} onClick={() => setCartOpen(true)}>
+            🛒
+            {cartCount > 0 && <span style={badge}>{cartCount}</span>}
+          </button>
+
+          <button style={iconBtn} onClick={() => setMenuOpen(true)}>
+            ☰
+          </button>
+        </div>
+      </nav>
 
       {/* MOBILE MENU */}
-      <div
-        style={{
-          maxHeight: open ? "300px" : "0",
-          overflow: "hidden",
-          transition: "max-height 0.35s ease",
-          background: "#02130d",
-          borderTop: open ? "1px solid rgba(255,255,255,0.08)" : "none",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            padding: open ? "16px" : "0 16px",
-            gap: "16px",
-          }}
-        >
-          <NavLinks
-            isActive={isActive}
-            cartCount={cartCount}
-            close={() => setOpen(false)}
-          />
-        </div>
-      </div>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={menuOverlay}
+            onClick={() => setMenuOpen(false)}
+          >
+            <motion.div
+              initial={{ y: -20 }}
+              animate={{ y: 0 }}
+              exit={{ y: -20 }}
+              style={menu}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Link href="/products" style={menuLink} onClick={() => setMenuOpen(false)}>
+                Products
+              </Link>
+              <Link href="/cart" style={menuLink} onClick={() => setMenuOpen(false)}>
+                Cart
+              </Link>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* CSS */}
-      <style jsx>{`
-        @media (min-width: 768px) {
-          button {
-            display: none;
-          }
-          .desktop-nav {
-            display: flex !important;
-          }
-          div[style*="max-height"] {
-            display: none;
-          }
-        }
-      `}</style>
-    </header>
+      {/* MOBILE CART */}
+      <MobileCart open={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
   );
 }
 
-/* -------- LINKS COMPONENT -------- */
-function NavLinks({ isActive, cartCount, close }) {
-  return (
-    <>
-      <Link
-        href="/products"
-        onClick={close}
-        style={{
-          color: isActive("/products") ? "#1dbf73" : "#fff",
-          textDecoration: "none",
-          fontWeight: 600,
-          fontSize: "18px",
-        }}
-      >
-        Products
-      </Link>
+/* ---------------- STYLES ---------------- */
 
-      <Link
-        href="/cart"
-        onClick={close}
-        style={{
-          color: isActive("/cart") ? "#1dbf73" : "#fff",
-          textDecoration: "none",
-          fontWeight: 600,
-          fontSize: "18px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-        }}
-      >
-        🛒 Cart
-        <span
-          style={{
-            background: "#1dbf73",
-            color: "#02130d",
-            borderRadius: "999px",
-            padding: "2px 8px",
-            fontSize: "14px",
-            fontWeight: 800,
-          }}
-        >
-          {cartCount || 0}
-        </span>
-      </Link>
-    </>
-  );
+const nav = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "16px 20px",
+  background: "#0b0f0d",
+  position: "sticky",
+  top: 0,
+  zIndex: 30,
+};
+
+const logo = {
+  fontSize: "20px",
+  fontWeight: "700",
+  color: "#1dbf73",
+  textDecoration: "none",
+};
+
+const links = {
+  display: "flex",
+  gap: "20px",
+};
+
+const link = {
+  color: "#fff",
+  textDecoration: "none",
+  fontSize: "16px",
+};
+
+const mobileIcons = {
+  display: "none",
+  gap: "14px",
+};
+
+const iconBtn = {
+  background: "transparent",
+  border: "none",
+  color: "#fff",
+  fontSize: "20px",
+  position: "relative",
+  cursor: "pointer",
+};
+
+const badge = {
+  position: "absolute",
+  top: "-6px",
+  right: "-10px",
+  background: "#1dbf73",
+  color: "#02130d",
+  borderRadius: "50%",
+  padding: "2px 6px",
+  fontSize: "12px",
+  fontWeight: "700",
+};
+
+const menuOverlay = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.6)",
+  zIndex: 40,
+};
+
+const menu = {
+  background: "#0b0f0d",
+  padding: "20px",
+  borderRadius: "16px",
+  margin: "80px auto",
+  width: "90%",
+  maxWidth: "320px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "16px",
+};
+
+const menuLink = {
+  color: "#fff",
+  textDecoration: "none",
+  fontSize: "18px",
+  textAlign: "center",
+};
+
+/* --------- RESPONSIVE --------- */
+
+if (typeof window !== "undefined") {
+  const style = document.createElement("style");
+  style.innerHTML = `
+    @media (max-width: 768px) {
+      .desktop-nav { display: none !important; }
+      .mobile-nav { display: flex !important; }
+    }
+  `;
+  document.head.appendChild(style);
 }
