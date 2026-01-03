@@ -888,10 +888,10 @@ export const phones = [
     id: "fold-2",
     name: "Samsung Galaxy Fold 2",
     category: "foldflip",
-    colors: ["Black", "White"], // placeholder colors
+    colors: ["Black", "Brown"], // placeholder colors
     images: {
       Black: "/images/fold-2/black.png",
-      White: "/images/fold-2/white.png"
+      White: "/images/fold-2/brown.png"
     },
     variants: [
       { storage: "256GB", price: 2300000 }
