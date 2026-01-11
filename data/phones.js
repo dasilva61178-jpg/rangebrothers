@@ -1003,10 +1003,10 @@ export const phones = [
     id: "flip-1",
     name: "Samsung Galaxy Flip 1",
     category: "foldflip",
-    colors: ["Black", "White"], // placeholder colors
+    colors: ["Black", "Purple"], // placeholder colors
     images: {
       Black: "/images/flip-1/black.png",
-      White: "/images/flip-1/white.png"
+      purple: "/images/flip-1/purple.png"
     },
     variants: [
       { storage: "256GB", price: 1683000 }
@@ -1066,10 +1066,10 @@ export const phones = [
     id: "pixel-8",
     name: "Google Pixel 8",
     category: "pixel",
-    colors: ["Black", "White"], // temporary colors until images added
+    colors: ["Black", "Green"], // temporary colors until images added
     images: {
       Black: "/images/pixel-8/black.png",
-      White: "/images/pixel-8/white.png"
+      Green: "/images/pixel-8/green.png"
     },
     variants: [
       { storage: "128GB", price: 2500000 },
